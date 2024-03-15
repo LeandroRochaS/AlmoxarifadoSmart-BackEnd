@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using AlmoxarifadoSmart.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AlmoxarifadoSmart.API
 {
     public partial class db_almoxarifadoContext : DbContext
     {
+     
+          
+     
         public db_almoxarifadoContext()
         {
         }
@@ -23,11 +28,17 @@ namespace AlmoxarifadoSmart.API
         public virtual DbSet<Produto> Produtos { get; set; } = null!;
         public virtual DbSet<Requisicao> Requisicaos { get; set; } = null!;
 
+        public virtual DbSet<LogModel> LOGROBO { get; set; } = null!;
+
+        public virtual DbSet<Benchmarking> Benchmarkings { get; set; } = null!;
+
+        public DbSet<ProdutoScraperModel> ProdutoScraper { get; set; }
+        public DbSet<StoreProdutoModel> StoreProdutos { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
                 optionsBuilder.UseSqlServer("Server=localhost;Initial Catalog=db_almoxarifado;Trusted_Connection=True;");
             }
         }
@@ -113,21 +124,35 @@ namespace AlmoxarifadoSmart.API
                     .HasColumnName("preco");
 
                 entity.HasMany(d => d.IdRequisicaos)
-                    .WithMany(p => p.IdProdutos)
-                    .UsingEntity<Dictionary<string, object>>(
-                        "ProdutoRequisicao",
-                        l => l.HasOne<Requisicao>().WithMany().HasForeignKey("IdRequisicao").OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK__ProdutoRe__id_re__4316F928"),
-                        r => r.HasOne<Produto>().WithMany().HasForeignKey("IdProduto").OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK__ProdutoRe__id_pr__4F7CD00D"),
-                        j =>
-                        {
-                            j.HasKey("IdProduto", "IdRequisicao").HasName("PK__ProdutoR__9781356BD7E2EC26");
+     .WithMany(p => p.IdProdutos)
+     .UsingEntity<Dictionary<string, object>>(
+         "ProdutoRequisicao",
+         l => l.HasOne<Requisicao>().WithMany().HasForeignKey("IdRequisicao").HasConstraintName("FK__ProdutoRe__id_re__4316F928"),
+         r => r.HasOne<Produto>().WithMany().HasForeignKey("IdProduto").HasConstraintName("FK__ProdutoRe__id_pr__4F7CD00D"),
+         j =>
+         {
+             j.HasKey("IdProduto", "IdRequisicao").HasName("PK__ProdutoR__9781356BD7E2EC26");
 
-                            j.ToTable("ProdutoRequisicao");
+             j.ToTable("ProdutoRequisicao");
 
-                            j.IndexerProperty<int>("IdProduto").HasColumnName("id_produto");
+             j.IndexerProperty<int>("IdProduto").HasColumnName("id_produto");
 
-                            j.IndexerProperty<int>("IdRequisicao").HasColumnName("id_requisicao");
-                        });
+             j.IndexerProperty<int>("IdRequisicao").HasColumnName("id_requisicao");
+         });
+
+                entity.HasOne(p => p.Branchmarking)
+         .WithOne(b => b.ProdutoNavegation)
+         .HasForeignKey<Benchmarking>(p => p.IdProduto)
+         .OnDelete(DeleteBehavior.Cascade)
+         .HasConstraintName("FK_Produto_Benchmarking");
+
+                entity.HasOne(p => p.ProdutoScraperModel)
+                    .WithOne(ps => ps.Produto)
+                    .HasForeignKey<ProdutoScraperModel>(ps => ps.IdProduto)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_Produto_ProdutoScraper");
+
+
             });
 
             modelBuilder.Entity<Requisicao>(entity =>
@@ -160,6 +185,31 @@ namespace AlmoxarifadoSmart.API
                     .HasForeignKey(d => d.IdFuncionario)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK__Requisica__id_fu__44FF419A");
+
+
+            });
+
+            modelBuilder.Entity<ProdutoScraperModel>(entity =>
+            {
+                entity.ToTable("ProdutoScraper");
+
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Loja)
+                      .HasColumnName("Loja")
+                      .HasColumnType("Int")
+                      .IsRequired();
+
+                entity.HasMany(p => p.Reports)
+                      .WithOne(b => b.ProdutoScraperModel)
+                      .HasForeignKey(sp => sp.ProdutoScraperModelId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(p => p.Produto)
+                      .WithOne(ps => ps.ProdutoScraperModel)
+                      .HasForeignKey<ProdutoScraperModel>(ps => ps.IdProduto)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .HasConstraintName("FK_ProdutoScraper_Produto");
             });
 
             OnModelCreatingPartial(modelBuilder);

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace AlmoxarifadoSmart.API
+namespace AlmoxarifadoSmart.Core.Entities
 {
     public partial class CategoriaMotivo
     {
