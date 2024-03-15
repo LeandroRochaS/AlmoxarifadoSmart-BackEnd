@@ -1,98 +1,92 @@
-﻿
-using AlmoxarifadoSmart.API;
+﻿using AlmoxarifadoSmart.API;
 using AlmoxarifadoSmart.Application.Services.Implementations.Log;
 using AlmoxarifadoSmart.Application.Services.Interfaces;
 using AlmoxarifadoSmart.Core.Entities;
 using AlmoxarifadoSmart.Core.Enums;
 using AlmoxarifadoSmart.Infrastructure.Utils;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
+using HtmlAgilityPack;
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 
-
-namespace AlmoxarifadoSmart.Application.Scrapers;
-
-public class ScraperMagazineLuiza : IScraperMagazineLuiza
+namespace AlmoxarifadoSmart.Application.Scrapers
 {
-
-    private readonly ILogService _registerLogService;
-
-    public ScraperMagazineLuiza(ILogService registerLogService)
+    public class ScraperMagazineLuiza : IScraperMagazineLuiza
     {
-        _registerLogService = registerLogService;
-    }
+        private readonly ILogService _registerLogService;
 
-    public StoreProdutoModel GetInfoProduct(string descricaoProduto, int idProduto)
-    {
-
-        StoreProdutoModel produtoScraper = new StoreProdutoModel();
-        try
+        public ScraperMagazineLuiza(ILogService registerLogService)
         {
-            ChromeOptions chromeOptions = new ChromeOptions();
-            chromeOptions.SetLoggingPreference("browser", OpenQA.Selenium.LogLevel.All);
-            chromeOptions.SetLoggingPreference("driver", OpenQA.Selenium.LogLevel.All);
-            chromeOptions.AddArgument("--headless");
-            chromeOptions.AddArgument("--disable-gpu");
+            _registerLogService = registerLogService;
+        }
 
-            // Desativa as mensagens no console do Chrome
-            chromeOptions.AddArgument("--disable-logging");
-            chromeOptions.AddArgument("--log-level=3");
-            chromeOptions.AddArgument("--silent");
-
-            // Inicializa o ChromeDriver com as opções configuradas
-            using (IWebDriver driver = new ChromeDriver(chromeOptions))
+        public async Task<StoreProdutoModel> GetInfoProduct(string descricaoProduto, int idProduto)
+        {
+            StoreProdutoModel produtoScraper = null;
+            try
             {
-
-
-                // Abre a página
-                driver.Navigate().GoToUrl($"https://www.magazineluiza.com.br/busca/{descricaoProduto}");
-
-          
-
-                // Encontra o elemento que possui o atributo data-testid
-                IWebElement priceElement = driver.FindElement(By.CssSelector("[data-testid='price-value']"));
-
-                IWebElement tagAElement = driver.FindElement(By.CssSelector("[data-testid='product-card-container']"));
-
-                var link = tagAElement.GetAttribute("href");
-
-                // Verifica se o elemento foi encontrado
-                if (priceElement != null && link != null)
+                using (HttpClient httpClient = new HttpClient())
                 {
+                    HttpResponseMessage response = await httpClient.GetAsync($"https://www.magazineluiza.com.br/busca/{descricaoProduto}");
 
-                    // Obtém o preço do primeiro produto
-                    string firstProductPrice = priceElement.Text;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string content = await response.Content.ReadAsStringAsync();
+                        var docHtml = new HtmlDocument();
+                        docHtml.LoadHtml(content);
 
-                    produtoScraper.Price = TransformStringToDecimal.StringToDecimal(firstProductPrice);
-                    produtoScraper.Link = link;
-                    produtoScraper.Store = StoresEnum.MagazineLuiza;
+                        var produtos = docHtml.DocumentNode.SelectNodes("//a");
 
-                    // Registra o log com o ID do produto
-                    _registerLogService.RegistrarLog("leandrorocha", DateTime.Now, "WebScraping - Magazine Luiza", "Sucesso", idProduto);
+                        if (produtos != null)
+                        {
+                            foreach (var item in produtos)
+                            {
+                                if (item.OuterHtml.Contains("data-testid=\"product-card-container\""))
+                                {
+                                    var card = item;
+                                    var linkproduto = "https://www.magazineluiza.com.br/" + card.Attributes["href"]?.Value;
+                                    var precoValue = card.SelectSingleNode(".//p[@data-testid=\"price-value\"]");
 
-                    // Retorna o preço
-                    return produtoScraper;
-                }
-                else
-                {
-                    Console.WriteLine("Preço não encontrado.");
+                                    if (precoValue != null && !string.IsNullOrEmpty(linkproduto))
+                                    {
+                                        string firstProductPrice = precoValue.InnerText;
+                                        decimal price = TransformStringToDecimal.StringToDecimal(firstProductPrice);
 
-                    // Registra o log com o ID do produto
-                    _registerLogService.RegistrarLog("leandrorocha", DateTime.Now, "WebScraping - Magazine Luiza", "Preço não encontrado", idProduto);
+                                        produtoScraper = new StoreProdutoModel
+                                        {
+                                            Price = price,
+                                            Link = linkproduto,
+                                            Store = StoresEnum.MagazineLuiza
+                                        };
 
-                    return null;
+                                        _registerLogService.RegistrarLog("leandrorocha", DateTime.Now, "WebScraping - Magazine Luiza", "Sucesso", idProduto);
+
+                                        return produtoScraper;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Se nenhum produto for encontrado ou o preço não for encontrado
+                        Console.WriteLine("Produto ou preço não encontrado.");
+                        _registerLogService.RegistrarLog("leandrorocha", DateTime.Now, "WebScraping - Magazine Luiza", "Produto ou preço não encontrado", idProduto);
+                    }
+                    else
+                    {
+                        // Se houver um problema com a solicitação HTTP
+                        _registerLogService.RegistrarLog("leandrorocha", DateTime.Now, "Web Scraping - Magazine Luiza", $"Erro na solicitação HTTP: {response.StatusCode}", idProduto);
+                    }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erro ao acessar a página: {ex.Message}");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao acessar a página: {ex.Message}");
 
-            // Registra o log com o ID do produto
-            _registerLogService.RegistrarLog("leandrorocha", DateTime.Now, "Web Scraping - Magazine Luiza", $"Erro: {ex.Message}", idProduto);
+                // Registra o log com o ID do produto
+                _registerLogService.RegistrarLog("leandrorocha", DateTime.Now, "Web Scraping - Magazine Luiza", $"Erro: {ex.Message}", idProduto);
+            }
 
-            return null;
+            return produtoScraper; // Certifique-se de retornar fora do bloco try-catch
         }
     }
-
-
 }

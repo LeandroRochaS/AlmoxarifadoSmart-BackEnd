@@ -141,7 +141,7 @@ public class ProdutoProcessor : IProdutoProcessor
     {
         var productScraperMercadoLivre = _scraperMercadoLivre.GetInfoProduct(produto.Nome, produto.Id);
 
-        var productScraperMagazineLuiza = _scraperMagazineLuiza.GetInfoProduct(produto.Nome, produto.Id);
+        var productScraperMagazineLuiza = _scraperMagazineLuiza.GetInfoProduct(produto.Nome, produto.Id).Result;
 
         Console.WriteLine(productScraperMagazineLuiza.Price);
         Console.WriteLine(productScraperMercadoLivre.Price);

@@ -10,7 +10,7 @@ namespace AlmoxarifadoSmart.Application.Scrapers
     public interface IScraperMagazineLuiza
     {
       
-            StoreProdutoModel GetInfoProduct(string descricaoProduto, int idProduto);
+             Task<StoreProdutoModel> GetInfoProduct(string descricaoProduto, int idProduto);
         
     }
 }
