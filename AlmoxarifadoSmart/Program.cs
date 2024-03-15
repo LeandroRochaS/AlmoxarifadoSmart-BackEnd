@@ -51,22 +51,21 @@ builder.Services.AddControllers().AddNewtonsoftJson(x =>
  x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
 
-builder.Services.AddCors(options =>
-{
-    var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>();
+//builder.Services.AddCors(options =>
+//{
+//    var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>();
 
-    options.AddDefaultPolicy(builder =>
-    {
-        foreach (var origin in corsOrigins)
-        {
-            builder.WithOrigins(origin);
-        }
+//    options.AddDefaultPolicy(builder =>
+//    {
+//        foreach (var origin in corsOrigins)
+//        {
+//            builder.WithOrigins(origin);
+//        }
 
-        builder.AllowAnyMethod()
-               .AllowAnyHeader();
-    });
-});
-
+//        builder.AllowAnyMethod()
+//               .AllowAnyHeader();
+//    });
+//});
 
 
 var app = builder.Build();
@@ -79,8 +78,15 @@ var app = builder.Build();
 
 
 
-app.UseCors(); 
+app.UseCors(policy =>
+{
 
+
+    policy.WithOrigins("*", "http://3.145.53.73:*")
+          .AllowAnyMethod()
+          .AllowAnyOrigin()
+          .AllowAnyHeader();
+});
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthorization();
