@@ -53,29 +53,33 @@ builder.Services.AddControllers().AddNewtonsoftJson(x =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("corsapp", builder =>
+    var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>();
+
+    options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://localhost:5173", "http://localhost:5174")
-               .AllowAnyMethod()
-               .AllowAnyHeader().WithExposedHeaders("X-Total-Pages", "X-Current-Page")
-               .AllowCredentials();
+        foreach (var origin in corsOrigins)
+        {
+            builder.WithOrigins(origin);
+        }
+
+        builder.AllowAnyMethod()
+               .AllowAnyHeader();
     });
 });
+
 
 
 var app = builder.Build();
 
 
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+
     app.UseSwagger();
     app.UseSwaggerUI();
-}
 
 
-app.UseCors("corsapp");
+
+app.UseCors(); 
 
 app.UseHttpsRedirection();
 app.UseRouting();
