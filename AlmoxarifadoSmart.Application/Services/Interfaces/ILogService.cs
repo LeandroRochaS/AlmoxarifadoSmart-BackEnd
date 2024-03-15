@@ -9,7 +9,7 @@ namespace AlmoxarifadoSmart.Application.Services.Interfaces
 {
     public interface ILogService
     {
-        void RegistrarLog(string usuRob, DateTime dateLog, string processo, string infLog, int idProd);
+        Task RegistrarLog(string usuRob, DateTime dateLog, string processo, string infLog, int idProd);
         Task<List<LogModel>> GetAll();
         Task<List<LogModel>> GetPagedLogs(int page, int pageSize, string filter);
         Task<int> GetTotalLogsCount();

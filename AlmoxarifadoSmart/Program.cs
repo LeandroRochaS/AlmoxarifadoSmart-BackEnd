@@ -23,7 +23,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
-builder.Services.AddDbContext<db_almoxarifadoContext>();
+builder.Services.AddDbContext<db_almoxarifadoContext>(ServiceLifetime.Transient);
 
 // Services
 builder.Services.AddScoped<IProdutoService, ProdutoService>();

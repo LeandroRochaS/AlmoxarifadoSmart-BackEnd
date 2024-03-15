@@ -9,6 +9,6 @@ namespace AlmoxarifadoSmart.Application.Services.Interfaces
 {
     public interface IReportEmailService
     {
-        void SendEmailReports(ProdutoScraperModel produto, string userEmail);
+        Task SendEmailReports(ProdutoScraperModel produto, string userEmail);
     }
 }

@@ -20,7 +20,7 @@ public class ReportWhatsappService : IReportWhatsappService
 
     }
 
-    public void SendWhatsappReports(ProdutoScraperModel produto, string userWhatsapp)
+    public async void SendWhatsappReports(ProdutoScraperModel produto, string userWhatsapp)
     {
         WhatsappService whatsappService = new WhatsappService();
         string plainTextReport = BuildPlainTextReport(produto);

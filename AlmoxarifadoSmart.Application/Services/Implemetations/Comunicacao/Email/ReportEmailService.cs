@@ -26,7 +26,7 @@ namespace AlmoxarifadoSmart.Application.Services.Implemetations.Comunicacao.Emai
 
         }
 
-        public void SendEmailReports(ProdutoScraperModel produto, string userEmail)
+        public async Task SendEmailReports(ProdutoScraperModel produto, string userEmail)
         {
 
 
@@ -34,7 +34,7 @@ namespace AlmoxarifadoSmart.Application.Services.Implemetations.Comunicacao.Emai
 
 
             string htmlReport = BuildHtmlReport(produto);
-            bool resultSendEmail = emailService.SendAsync("Leandro Rocha", userEmail, $"Relatório Comparação de Produtos - {produto.Nome}", htmlReport).Result;
+            bool resultSendEmail = await emailService.SendAsync("Leandro Rocha", userEmail, $"Relatório Comparação de Produtos - {produto.Nome}", htmlReport);
 
             RegisterLogEmail(resultSendEmail, produto);
 

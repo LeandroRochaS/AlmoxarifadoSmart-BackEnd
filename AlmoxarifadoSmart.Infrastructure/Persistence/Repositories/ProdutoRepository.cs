@@ -36,7 +36,8 @@ public class ProdutoRepository : IProdutoRepository
 
     public async Task<Produto> GetByIdAsync(int id)
     {
-        Produto? produto = await _dbContext.Produtos.FirstOrDefaultAsync(x => x.Id == id);
+        // Obtenha o produto usando o DbContext
+        Produto produto = await _dbContext.Produtos.FirstAsync(x => x.Id == id);
         return produto;
     }
 

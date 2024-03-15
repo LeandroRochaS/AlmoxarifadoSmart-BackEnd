@@ -193,7 +193,7 @@ public class ProdutoProcessor : IProdutoProcessor
 
                 await _produtoService.ConfirmarEnvioEmail(IdProduto);
 
-                _reportEmailService.SendEmailReports(produto, userEmail);
+                await _reportEmailService.SendEmailReports(produto, userEmail);
 
                 return true;
             }

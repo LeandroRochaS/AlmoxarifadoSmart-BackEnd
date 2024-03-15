@@ -119,25 +119,35 @@ namespace AlmoxarifadoSmart.Application.Services.Implemetations.ProdutosServices
             produto.Branchmarking.StatusEmail = StatusEmailEnum.Enviado;
 
             await _produtoRepository.UpdateAsync(produto);
+         
         }
 
         public async Task AtualizaPrecoProduto(int idProduto, decimal preco)
         {
-            Produto produto = await _produtoRepository.GetByIdAsync(idProduto);
-
-            if (produto == null)
+            try
             {
-                return;
+                // Obtenha o produto usando GetByIdAsync
+                Produto produto = await GetByIdAsync(idProduto);
+
+                if (produto == null)
+                {
+                    return;
+                }
+
+                // Atualize o preço
+                produto.Preco = preco;
+
+                // Salve as alterações
+                await _produtoRepository.UpdateAsync(produto);
             }
-
-            produto.Preco = preco;
-
-            await _produtoRepository.UpdateAsync(produto);
-
-            
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public  Task RegistrarError(int IdProduto)
+
+        public Task RegistrarError(int IdProduto)
         {
             
             return  _produtoRepository.RegistraError(IdProduto);
