@@ -85,7 +85,7 @@ app.UseCors(policy =>
     policy.WithOrigins("*", "http://3.145.53.73:*")
           .AllowAnyMethod()
           .AllowAnyOrigin()
-          .AllowAnyHeader();
+          .AllowAnyHeader().WithExposedHeaders("*");
 });
 app.UseHttpsRedirection();
 app.UseRouting();
