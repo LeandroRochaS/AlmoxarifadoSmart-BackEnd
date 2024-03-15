@@ -39,7 +39,7 @@ namespace AlmoxarifadoSmart.API
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=localhost;Initial Catalog=db_almoxarifado;Trusted_Connection=True;");
+                optionsBuilder.UseSqlServer("Server=dbbenchmarking.cfk2cqm644xo.us-east-2.rds.amazonaws.com;Initial Catalog=almoxarifadoequipe04;User Id=admin;Password=master12");
             }
         }
 
